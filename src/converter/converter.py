@@ -74,7 +74,7 @@ class IfcConverter:
 
                 speckle_objs.append(speckle_obj)
 
-            type_name = (type[3:] + 's').lower()
+            type_name = ('@' + type[3:] + 's').lower()
             base[type_name] = speckle_objs
 
         sw = StreamWrapper(target_url)
@@ -83,5 +83,7 @@ class IfcConverter:
 
         hash = operations.send(base=base, transports=[transport])
 
-        client.commit.create(stream_id=transport.stream_id, object_id=hash, branch_name=sw.branch_name)
+        commit_id = client.commit.create(stream_id=transport.stream_id, object_id=hash, branch_name=sw.branch_name)
+
+        return hash, f'https://speckle.xyz/streams/{transport.stream_id}/commits/{commit_id}'
 
