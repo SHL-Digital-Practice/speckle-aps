@@ -1,0 +1,2 @@
+specklepy
+ifcopenshell
