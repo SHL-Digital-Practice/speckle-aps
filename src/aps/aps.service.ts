@@ -4,10 +4,20 @@ import {
   AuthenticationClient,
 } from 'forge-server-utils';
 import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { Repository } from 'typeorm';
+import { ApsJob } from './entities/aps-job.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ApsService {
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private readonly httpService: HttpService,
+    @InjectRepository(ApsJob)
+    private apsjobRepository: Repository<ApsJob>,
+  ) {}
 
   modelDerivativeClient: ModelDerivativeClient;
   authenticationClient: AuthenticationClient;
@@ -28,37 +38,44 @@ export class ApsService {
     this.modelDerivativeClient = new ModelDerivativeClient(this.auth);
   }
 
-  async startJob(urn: string): string {
-    Logger.log('Test Starting Job', 'URN:', urn);
-    //get lastest version
+  async startApsJob(urn: string) {
+    try {
+      const existingJob = await this.apsjobRepository.find({
+        where: { apsUri: urn },
+      });
 
-    //get the derivative with the urn
+      if (existingJob.length > 0) {
+        return 'Job already started';
+      }
 
-    //if not get the job done
-    // this.modelDerivativeClient.getDerivative(urn, );
+      this.apsjobRepository.save({ apsUri: urn });
 
-    const res = await this.modelDerivativeClient.submitJob(urn, [
-      {
-        type: 'ifc',
-      },
-    ]);
+      const res = await this.modelDerivativeClient.submitJob(urn, [
+        {
+          type: 'ifc',
+        },
+      ]);
 
-    return 'Job started';
+      return res;
+    } catch (error) {
+      Logger.error(error);
+    }
   }
 
-  async getIfc(urn: string) {
-    const manifest = await this.modelDerivativeClient.getManifest(urn);
+  async getIfcDerivativeUrn(modelUrn: string) {
+    const manifest = await this.modelDerivativeClient.getManifest(modelUrn);
 
-    let ifcDerivativeUrn = '';
-
+    let ifcDerivativeUrn;
     manifest.derivatives.forEach((derivative) => {
-      if (derivative.outputType === 'ifc') {
-        // Logger.log('Derivative:', derivative.children[0].urn);
-
+      if (derivative.outputType === 'ifc' && derivative.status === 'success') {
         ifcDerivativeUrn = derivative.children[0].urn;
       }
     });
 
+    return ifcDerivativeUrn;
+  }
+
+  async ifcToSpeckle(modelUrn: string, ifcDerivativeUrn: string) {
     const { access_token } = await this.authenticationClient.authenticate([
       'data:read',
       'data:write',
@@ -66,12 +83,40 @@ export class ApsService {
 
     // const derivativethis.modelDerivativeClient.getDerivative(urn, 'ifc');
     const url = await this.getSignedUrlFromDerivative(
-      urn,
+      modelUrn,
       ifcDerivativeUrn,
       access_token,
     );
 
-    return url;
+    return this.uplaodIfcToSpeckle(modelUrn, url);
+  }
+
+  async uplaodIfcToSpeckle(modelUrn: string, ifcDownloadUrl: string) {
+    //upload to speckle
+    const response = await firstValueFrom(
+      this.httpService.get(
+        'https://b26c-193-5-54-12.ngrok-free.app/ifc_to_speckle',
+        {
+          params: { url: ifcDownloadUrl },
+        },
+      ),
+    );
+
+    type SpeckleObject = {
+      object_id: string;
+      commit_url: string;
+    };
+
+    this.apsjobRepository.update(
+      { apsUri: modelUrn },
+      { speckleStream: response.data.object_id },
+    );
+
+    const speckleObject: SpeckleObject = {
+      object_id: response.data.object_id,
+      commit_url: response.data.commit_url,
+    };
+    return speckleObject;
   }
 
   async getSignedUrlFromDerivative(
