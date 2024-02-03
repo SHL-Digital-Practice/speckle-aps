@@ -3,5 +3,7 @@
     "Dimensions_Length":"length",
     "Dimensions_Area":"area",
     "Construction_Width":"width",
-    "Constraints_Unconnected Height":"height"
+    "Constraints_Unconnected Height":"height",
+    "Other Family and Type":"type",
+    "Other Category":"category"
 }
