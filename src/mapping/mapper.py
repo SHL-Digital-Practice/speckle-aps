@@ -6,8 +6,15 @@ import json
 
 
 class Mapper():
+    """maps attribute keys according to the definition in the mapping_config file
+    """
 
     def __init__(self, configFileName):
+        """Initialise a mapper.
+
+        Args:
+            configFileName (string): json file name (with .json suffix). This file must be placed in the src/mapping/mapping_config folder.
+        """
         self.ConfigFileName = configFileName
         self.MappingDictionary = self.LoadMappingDictionary()
 
