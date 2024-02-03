@@ -42,15 +42,15 @@ export class ApsService {
 
   async startApsJob(urn: string) {
     try {
-      const existingJob = await this.apsjobRepository.find({
-        where: { apsUri: urn },
-      });
+      // const existingJob = await this.apsjobRepository.find({
+      //   where: { apsUri: urn },
+      // });
 
       this.apsjobRepository.save({ apsUri: urn });
 
-      if (existingJob.length > 0) {
-        return 'Job already started';
-      }
+      // if (existingJob.length > 0) {
+      //   return 'Job already started';
+      // }
 
       const res = await this.modelDerivativeClient.submitJob(urn, [
         {
@@ -67,14 +67,18 @@ export class ApsService {
   async getIfcDerivativeUrn(modelUrn: string) {
     const manifest = await this.modelDerivativeClient.getManifest(modelUrn);
 
-    let ifcDerivativeUrn;
+    let res;
     manifest.derivatives.forEach((derivative) => {
-      if (derivative.outputType === 'ifc' && derivative.status === 'success') {
-        ifcDerivativeUrn = derivative.children[0].urn;
+      if (derivative.outputType === 'ifc') {
+        if (derivative.status === 'success') {
+          res = derivative.children[0].urn;
+        }
+      }
+      if (derivative.status === 'inprogress') {
+        res = derivative.status + derivative.progress;
       }
     });
-
-    return ifcDerivativeUrn;
+    return res;
   }
 
   async ifcToSpeckle(
@@ -94,7 +98,7 @@ export class ApsService {
       access_token,
     );
 
-    const speckleDto = this.uplaodIfcToSpeckle(modelUrn, url);
+    const speckleDto = this.uplaodIfcToSpeckle(modelUrn, url, apsProjectName);
     return speckleDto;
   }
 
