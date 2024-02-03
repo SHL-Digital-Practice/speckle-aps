@@ -1,3 +1,5 @@
 specklepy
 ifcopenshell
 shapely
+tqdm
+flask
