@@ -9,7 +9,7 @@ class Mapper():
 
     def __init__(self, configFileName):
         self.ConfigFileName = configFileName
-        self.MappingDictionary = self.LoadJson()
+        self.MappingDictionary = self.LoadMappingDictionary()
 
 
     def LoadMappingDictionary(self):
@@ -27,7 +27,8 @@ class Mapper():
         """try to convert the input key using the loaded mapping dictionnary.
         Returns the targetKey if source is found in the config. Returns the original key otherwise.
         """
-        return self.MappingDictionary.get(sourceKey, sourceKey)
+        targetKey = self.MappingDictionary.get(sourceKey, sourceKey)
+        return targetKey
 
-print ("starting")
-mapper = Mapper("mapping_X2Y.json")
+# print ("starting")
+# mapper = Mapper("mapping_X2Y.json")

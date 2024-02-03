@@ -1,3 +1,7 @@
 {
-    "sourceKey":"targetKey"
+    "Dimensions_Volume":"volume",
+    "Dimension_Length":"length",
+    "Dimension_Area":"area",
+    "Construction_Width":"width"
+
 }

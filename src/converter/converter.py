@@ -10,6 +10,8 @@ from specklepy.objects.geometry import Mesh
 
 from src.objects import *
 
+from src.mapping import *
+
 
 class IfcConverter:
 
@@ -44,6 +46,8 @@ class IfcConverter:
         base = Base()
         # base.add_chunkable_attrs(walls=100)
 
+        KeyMapper = Mapper("mapping_X2Y.json")
+
         for type, _class in self.TYPES.items():
 
             speckle_objs = []
@@ -66,7 +70,9 @@ class IfcConverter:
                 flat_pset = flatten_dict(pset)
                 parameters = Base()
                 speckle_obj.parameters = parameters
-                for key, value in flat_pset.items():
+                for sourceKey, value in flat_pset.items():
+                    # convert source key to target key using the config mapper
+                    key = KeyMapper.ConvertAttributeKey(sourceKey)
                     if hasattr(speckle_obj, key):
                         setattr(speckle_obj, key, value)
                     else:
