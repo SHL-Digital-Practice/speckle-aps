@@ -16,6 +16,14 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@app/speckle": [
+        "libs/speckle/src"
+      ],
+      "@app/speckle/*": [
+        "libs/speckle/src/*"
+      ]
+    }
   }
 }

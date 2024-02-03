@@ -3,6 +3,18 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true
+  },
+  "projects": {
+    "speckle": {
+      "type": "library",
+      "root": "libs/speckle",
+      "entryFile": "index",
+      "sourceRoot": "libs/speckle/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/speckle/tsconfig.lib.json"
+      }
+    }
   }
 }
