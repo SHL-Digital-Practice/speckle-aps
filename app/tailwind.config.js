@@ -9,7 +9,17 @@ export default {
     './error.vue',
   ],
   theme: {
-    extend: {},
+    extend: {
+      // Define your custom primary color here
+      colors: {
+        primary: {
+          DEFAULT: '#007459', // Change this color code to your desired primary color
+        },
+      },
+    },
   },
-  plugins: [require('daisyui')],
+  daisyui: {
+    themes: ['light', 'dark', 'cupcake', 'nord', 'lofi'],
+  },
+  plugins: [require('@tailwindcss/typography'), require('daisyui')],
 };

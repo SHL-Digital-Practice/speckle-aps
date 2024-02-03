@@ -1,8 +1,9 @@
 import { AuthenticationClient, BIM360Client } from 'forge-server-utils';
 
-type Project = {
+export type Project = {
   id: string;
   name: string;
+  hubId: string;
 };
 
 const projectsCache: Project[] = [];
@@ -10,7 +11,7 @@ const projectsCache: Project[] = [];
 export default defineEventHandler(async (event) => {
   console.log('Fetching proejcts...');
   const query = getQuery(event);
-  const { hubId } = query;
+  const { hubId, projectSearch } = query;
 
   if (!hubId) {
     return [];
@@ -29,10 +30,19 @@ export default defineEventHandler(async (event) => {
     const projects: Project[] = projectsData.map((project) => ({
       id: project.id,
       name: project.name || 'Unnamed Project',
+      hubId: hubId as string,
     }));
     projectsCache.push(...projects);
   } else {
     console.log('Using cached projects');
+  }
+
+  if (projectSearch) {
+    return projectsCache.filter((project) =>
+      project.name
+        .toLowerCase()
+        .includes((projectSearch as string).toLowerCase()),
+    );
   }
 
   return projectsCache || [];
