@@ -10,8 +10,15 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.17",
+    "daisyui": "^4.6.1",
     "nuxt": "^3.10.0",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
     "vue": "^3.4.15",
     "vue-router": "^4.2.5"
+  },
+  "dependencies": {
+    "forge-server-utils": "^9.0.5"
   }
 }
