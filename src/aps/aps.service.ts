@@ -78,6 +78,7 @@ export class ApsService {
         res = derivative.status + derivative.progress;
       }
     });
+
     return res;
   }
 
