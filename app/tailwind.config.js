@@ -1,3 +1,5 @@
+const defaultTheme = require('tailwindcss/defaultTheme');
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -15,6 +17,9 @@ export default {
         primary: {
           DEFAULT: '#007459', // Change this color code to your desired primary color
         },
+      },
+      fontFamily: {
+        sans: ['Outfit', ...defaultTheme.fontFamily.sans],
       },
     },
   },

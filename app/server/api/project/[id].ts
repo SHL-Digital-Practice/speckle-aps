@@ -3,6 +3,7 @@ import { AuthenticationClient, BIM360Client } from 'forge-server-utils';
 type File = {
   id: string;
   name: string;
+  latestVersion?: string;
   type: 'file';
 };
 
@@ -10,6 +11,7 @@ type Folder = {
   id: string;
   name: string;
   contents: Content[];
+  latestVersion?: string;
   type: 'folder';
 };
 
@@ -64,6 +66,13 @@ async function getFolderContents(
   const files = contents
     .filter((c) => c.type === 'items')
     .map<File>((f: any) => ({ id: f.id, name: f.displayName, type: 'file' }));
+
+  for (const file of files) {
+    const versions = await bim360Client.listVersions(projectId, file.id);
+    const latestVersion = versions[0];
+    file.latestVersion = latestVersion.derivative;
+  }
+
   const subFolders = contents
     .filter((c) => c.type === 'folders')
     .map<Folder>((f: any) => ({

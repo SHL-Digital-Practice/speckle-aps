@@ -6,8 +6,6 @@ export type Project = {
   hubId: string;
 };
 
-const projectsCache: Project[] = [];
-
 export default defineEventHandler(async (event) => {
   console.log('Fetching proejcts...');
   const query = getQuery(event);
@@ -24,26 +22,21 @@ export default defineEventHandler(async (event) => {
 
   const bim360Client = new BIM360Client({ token: result.access_token });
 
-  if (projectsCache.length === 0) {
-    console.log('Fetching projects for hub', hubId);
-    const projectsData = await bim360Client.listProjects(hubId as string);
-    const projects: Project[] = projectsData.map((project) => ({
-      id: project.id,
-      name: project.name || 'Unnamed Project',
-      hubId: hubId as string,
-    }));
-    projectsCache.push(...projects);
-  } else {
-    console.log('Using cached projects');
-  }
+  console.log('Fetching projects for hub', hubId);
+  const projectsData = await bim360Client.listProjects(hubId as string);
+  const projects: Project[] = projectsData.map((project) => ({
+    id: project.id,
+    name: project.name || 'Unnamed Project',
+    hubId: hubId as string,
+  }));
 
   if (projectSearch) {
-    return projectsCache.filter((project) =>
+    return projects.filter((project) =>
       project.name
         .toLowerCase()
         .includes((projectSearch as string).toLowerCase()),
     );
   }
 
-  return projectsCache || [];
+  return projects || [];
 });
