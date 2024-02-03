@@ -6,8 +6,14 @@ export class ApsJob {
   id: number;
 
   @Column({ nullable: true })
-  speckleStream: string;
+  speckleStreamUrl: string;
+
+  @Column({ nullable: true })
+  speckleRootObjectId: string;
 
   @Column()
   apsUri: string;
+
+  @Column({ nullable: true })
+  apsProjectName: string;
 }

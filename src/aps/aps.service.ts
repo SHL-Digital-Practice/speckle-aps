@@ -10,6 +10,10 @@ import { Repository } from 'typeorm';
 import { ApsJob } from './entities/aps-job.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
+type SpeckleDto = {
+  speckleRootObjectId: string;
+  speckleStreamUrl: string;
+};
 @Injectable()
 export class ApsService {
   constructor(
@@ -24,8 +28,6 @@ export class ApsService {
   auth: { client_id: string; client_secret: string; scope?: string[] };
 
   onModuleInit() {
-    Logger.log('Test Initializing Model Derivative client');
-    Logger.log(this.configService.getOrThrow<string>('APS_CLIENT_ID'));
     this.auth = {
       client_id: this.configService.getOrThrow<string>('APS_CLIENT_ID'),
       client_secret: this.configService.getOrThrow<string>('APS_CLIENT_SECRET'),
@@ -44,11 +46,11 @@ export class ApsService {
         where: { apsUri: urn },
       });
 
+      this.apsjobRepository.save({ apsUri: urn });
+
       if (existingJob.length > 0) {
         return 'Job already started';
       }
-
-      this.apsjobRepository.save({ apsUri: urn });
 
       const res = await this.modelDerivativeClient.submitJob(urn, [
         {
@@ -75,7 +77,11 @@ export class ApsService {
     return ifcDerivativeUrn;
   }
 
-  async ifcToSpeckle(modelUrn: string, ifcDerivativeUrn: string) {
+  async ifcToSpeckle(
+    modelUrn: string,
+    ifcDerivativeUrn: string,
+    apsProjectName: string,
+  ) {
     const { access_token } = await this.authenticationClient.authenticate([
       'data:read',
       'data:write',
@@ -88,35 +94,47 @@ export class ApsService {
       access_token,
     );
 
-    return this.uplaodIfcToSpeckle(modelUrn, url);
+    const speckleDto = this.uplaodIfcToSpeckle(modelUrn, url);
+    return speckleDto;
   }
 
-  async uplaodIfcToSpeckle(modelUrn: string, ifcDownloadUrl: string) {
+  async uplaodIfcToSpeckle(
+    modelUrn: string,
+    ifcDownloadUrl: string,
+    apsProjectName: string,
+  ): Promise<SpeckleDto> {
     //upload to speckle
+    const job = await this.apsjobRepository.findOne({
+      where: { apsUri: modelUrn },
+    });
+
+    if (job.speckleRootObjectId && job.speckleStreamUrl) {
+      return {
+        speckleStreamUrl: job.speckleStreamUrl,
+        speckleRootObjectId: job.speckleRootObjectId,
+      } as SpeckleDto;
+    }
+
     const response = await firstValueFrom(
       this.httpService.get(
         'https://b26c-193-5-54-12.ngrok-free.app/ifc_to_speckle',
         {
-          params: { url: ifcDownloadUrl },
+          params: { project_name: apsProjectName, url: ifcDownloadUrl },
         },
       ),
     );
 
-    type SpeckleObject = {
-      object_id: string;
-      commit_url: string;
+    const speckleDto: SpeckleDto = {
+      speckleStreamUrl: response.data.commit_url,
+      speckleRootObjectId: response.data.object_id,
     };
 
     this.apsjobRepository.update(
       { apsUri: modelUrn },
-      { speckleStream: response.data.object_id },
+      { ...speckleDto, apsProjectName },
     );
 
-    const speckleObject: SpeckleObject = {
-      object_id: response.data.object_id,
-      commit_url: response.data.commit_url,
-    };
-    return speckleObject;
+    return speckleDto;
   }
 
   async getSignedUrlFromDerivative(

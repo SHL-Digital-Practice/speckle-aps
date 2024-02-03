@@ -23,9 +23,10 @@ export class ApsController {
 
   @Post('ifc-to-speckle')
   ifcToSpeckle(
+    @Query('projectName') projectName: string,
     @Query('derivativeUrn') derivativeUrn: string,
     @Query('modelUrn') modelUrn: string,
   ) {
-    return this.apsService.ifcToSpeckle(modelUrn, derivativeUrn);
+    return this.apsService.ifcToSpeckle(modelUrn, derivativeUrn, projectName);
   }
 }
