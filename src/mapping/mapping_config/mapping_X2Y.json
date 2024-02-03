@@ -2,6 +2,8 @@
     "Dimensions_Volume":"volume",
     "Dimensions_Length":"length",
     "Dimensions_Area":"area",
-    "Construction_Width":"width",
-    "Constraints_Unconnected Height":"height"
+    "Construction_Width":"thickness",
+    "Constraints_Unconnected Height":"height",
+    "Construction_Monolithic Thickness": "thickness",
+    "Dimensions_Total Thickness": "thickness"
 }

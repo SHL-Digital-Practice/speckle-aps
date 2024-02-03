@@ -13,12 +13,13 @@ app = Flask(__name__)
 @app.get('/ifc_to_speckle')
 def ifc_to_speckle():
 
-    target_url = 'https://speckle.xyz/streams/cb3735a1c9/branches/test'
+    stream_url = 'https://speckle.xyz/streams/cb3735a1c9'
     token = '902d92398804e5f0afe1f1c92ea89e8a48797d4ffa'
     file = Path(f'temp/{uuid.uuid4().hex}.ifc')
     file.parent.mkdir(parents=True, exist_ok=True)
 
     url = request.args.get('url')
+    project_name = request.args.get('project_name')
 
     response = requests.get(url)
     with open(file, 'wb') as f:
@@ -26,7 +27,9 @@ def ifc_to_speckle():
 
     converter = IfcConverter()
     converter.open_ifc(file)
-    obj_id, commit_url = converter.to_speckle(token, target_url)
+    converter.convert_to_speckle()
+    converter.compute_lca()
+    obj_id, commit_url = converter.send_to_speckle(token, stream_url, project_name)
 
     os.remove(file)
 

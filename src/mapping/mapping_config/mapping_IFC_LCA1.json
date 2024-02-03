@@ -1,0 +1,13 @@
+{
+  "aluminium": "Aluminium sheet for walls and ceilings, scrap 0%",
+  "gips": "Gypsum plasterboard for interior use",
+  "stahl": "Sandwich panel, steel, PIR insulation",
+  "beton": "Ready-mix concrete C25/30",
+  "steinwolle": "Stone wool insulation for roofs, density 63 kg/m3",
+  "glaswolle": "Glass wool insulation, density 60 kg/m3",
+  "terracotta": "Ready-mix concrete C25/30",
+  "keramik": "Ceramic tile for walls",
+  "holz": "Heat treated timber for indoor use",
+  "precast": "Precast concrete, ribbed floor, TT-slab C50/60",
+  "de001": "CLT, Cross laminated timber"
+}

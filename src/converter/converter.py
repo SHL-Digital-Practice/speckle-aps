@@ -1,3 +1,5 @@
+import json
+import ast
 import tqdm
 
 import ifcopenshell.geom
@@ -11,6 +13,8 @@ from specklepy.objects.geometry import Mesh
 from src.objects import *
 
 from src.mapping import *
+
+import pandas as pd
 
 
 class IfcConverter:
@@ -27,11 +31,12 @@ class IfcConverter:
         self.model = None
         self.settings = ifcopenshell.geom.settings()
         self.settings.set(self.settings.USE_WORLD_COORDS, True)
+        self.speckle_project = None
 
     def open_ifc(self, file):
         self.model = ifcopenshell.open(file)
 
-    def to_speckle(self, token, target_url):
+    def convert_to_speckle(self):
 
         def flatten_dict(d, parent_key='', sep='_'):
             items = []
@@ -47,11 +52,13 @@ class IfcConverter:
         # base.add_chunkable_attrs(walls=100)
 
         KeyMapper = Mapper("mapping_X2Y.json")
+        materials = set()
 
-        for type, _class in self.TYPES.items():
+        for _type, _class in self.TYPES.items():
 
             speckle_objs = []
-            for elem in tqdm.tqdm(self.model.by_type(type), f'Converting {type}...'):
+            for elem in tqdm.tqdm(self.model.by_type(_type), f'Converting {_type}...'):
+            # for elem in tqdm.tqdm(self.model.by_type(_type)[:5], f'Converting {_type}...'):
 
                 shape = ifcopenshell.geom.create_shape(self.settings, elem)
 
@@ -78,18 +85,59 @@ class IfcConverter:
                     else:
                         setattr(speckle_obj.parameters, key, value)
 
+
+                # lca_material =
+
+
                 speckle_objs.append(speckle_obj)
 
-            type_name = ('@' + type[3:] + 's').lower()
+            type_name = ('@' + _type[3:] + 's').lower()
             base[type_name] = speckle_objs
 
-        sw = StreamWrapper(target_url)
+        self.speckle_project = base
+
+    def compute_lca(self):
+
+        df = pd.read_excel('src/data/lca-dataset 1.xlsx')
+
+        # Compose json config path
+        json_file = 'src/mapping/mapping_config/mapping_IFC_LCA1.json'
+
+        # Read json content
+        with open(json_file) as json_data:
+            material_mapping = json.load(json_data)
+
+        for _type, _class in self.TYPES.items():
+            for elem in getattr(self.speckle_project, '@' + _type[3:].lower() + 's'):
+
+                for material in material_mapping.keys():
+                    if material in elem.name.lower():
+                        lca_data = df[df['Resources.Name'] == material_mapping[material]]
+                        lca_data = lca_data.iloc[0]
+                        density = lca_data['Resources.Conversions.Value']
+                        if isinstance(density, str):
+                            density = float(ast.literal_eval(density.replace(',', '.')))
+                        gwp_per_kg = lca_data['Resources.DataItems.DataValueItems.Value']
+                        if isinstance(gwp_per_kg, str):
+                            gwp_per_kg = float(ast.literal_eval(gwp_per_kg.replace(',', '.')))
+
+                        if elem.volume:
+                            gwp = elem.volume * density * gwp_per_kg
+                            elem.density = density
+                            elem.gwp_per_kg = gwp_per_kg
+                            elem.gwp = gwp
+
+    def send_to_speckle(self, token, stream_url, project_name):
+
+        sw = StreamWrapper(stream_url)
         client = sw.get_client(token=token)
         transport = sw.get_transport(token=token)
 
-        hash = operations.send(base=base, transports=[transport])
+        _hash = operations.send(base=self.speckle_project, transports=[transport])
 
-        commit_id = client.commit.create(stream_id=transport.stream_id, object_id=hash, branch_name=sw.branch_name)
+        client.branch.create(sw.stream_id, project_name)
 
-        return hash, f'https://speckle.xyz/streams/{transport.stream_id}/commits/{commit_id}'
+        commit_id = client.commit.create(stream_id=transport.stream_id, object_id=_hash, branch_name=project_name)
+
+        return _hash, f'https://speckle.xyz/streams/{transport.stream_id}/commits/{commit_id}'
 

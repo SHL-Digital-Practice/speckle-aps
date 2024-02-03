@@ -8,3 +8,6 @@ class Speckle2Floor(Base, speckle_type='Objects.BuiltElements.Floor'):
 	elements: List[Base] = None
 	displayMesh: Mesh = None
 	units: str = None
+	thickness: float = None
+	volume: float = None
+	area: float = None

@@ -9,3 +9,4 @@ class Speckle2Wall(Base, speckle_type='Objects.BuiltElements.Wall'):
     displayMesh: Mesh = None
     units: str = None
     volume: float = None
+    thickness: float = None
