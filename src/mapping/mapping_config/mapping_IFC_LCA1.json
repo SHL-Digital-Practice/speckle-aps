@@ -9,5 +9,16 @@
   "keramik": "Ceramic tile for walls",
   "holz": "Heat treated timber for indoor use",
   "precast": "Precast concrete, ribbed floor, TT-slab C50/60",
-  "de001": "CLT, Cross laminated timber"
+  "de001": "CLT, Cross laminated timber",
+  "timber": "Heat treated timber for indoor use",
+  "conc": "Ready-mix concrete C25/30",
+  "concrete": "Ready-mix concrete C25/30",
+  "foundation": "Ready-mix concrete C25/30",
+  "generic": "CLT, Cross laminated timber",
+  "partition": "Gypsum plasterboard for interior use",
+  "tunnel": "Ready-mix concrete C25/30",
+  "stair": "Ready-mix concrete C25/30",
+  "wall": "Ready-mix concrete C25/30",
+  "floor": "Ready-mix concrete C25/30",
+  "me_t": "Ready-mix concrete C25/30"
 }

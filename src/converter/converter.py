@@ -1,6 +1,7 @@
 import json
 import ast
 import tqdm
+from pathlib import Path
 
 import ifcopenshell.geom
 import ifcopenshell.util.shape
@@ -9,6 +10,11 @@ from specklepy.api import operations
 from specklepy.api.wrapper import StreamWrapper
 from specklepy.objects import Base
 from specklepy.objects.geometry import Mesh
+
+# Add to path
+import sys
+import os
+sys.path.append(str(Path(os.getcwd()).parent))
 
 from src.objects import *
 
@@ -25,6 +31,7 @@ class IfcConverter:
         'IfcSpace': Speckle2Space,
         # 'IfcBeam': Speckle2Beam,
         # 'IfcColumn': Speckle2Column,
+        'IfcBuildingElementProxy': Speckle2Wall
     }
 
     def __init__(self):
@@ -60,17 +67,21 @@ class IfcConverter:
             for elem in tqdm.tqdm(self.model.by_type(_type), f'Converting {_type}...'):
             # for elem in tqdm.tqdm(self.model.by_type(_type)[:5], f'Converting {_type}...'):
 
-                shape = ifcopenshell.geom.create_shape(self.settings, elem)
-
-                new_faces = []
-                for face in ifcopenshell.util.shape.get_faces(shape.geometry):
-                    new_faces.extend([0] + list(face))
-
-                mesh = Mesh.create(vertices=list(shape.geometry.verts), faces=new_faces)
-
                 speckle_obj = _class()
                 speckle_obj.name = elem.Name
-                speckle_obj.displayMesh = mesh
+
+                try:
+                    shape = ifcopenshell.geom.create_shape(self.settings, elem)
+
+                    new_faces = []
+                    for face in ifcopenshell.util.shape.get_faces(shape.geometry):
+                        new_faces.extend([0] + list(face))
+
+                    mesh = Mesh.create(vertices=list(shape.geometry.verts), faces=new_faces)
+
+                    speckle_obj.displayMesh = mesh
+                except:
+                    pass
 
                 pset = ifcopenshell.util.element.get_psets(elem)
 
@@ -85,10 +96,6 @@ class IfcConverter:
                     else:
                         setattr(speckle_obj.parameters, key, value)
 
-
-                # lca_material =
-
-
                 speckle_objs.append(speckle_obj)
 
             type_name = ('@' + _type[3:] + 's').lower()
@@ -98,20 +105,35 @@ class IfcConverter:
 
     def compute_lca(self):
 
-        df = pd.read_excel('src/data/lca-dataset 1.xlsx')
+        df = pd.read_excel(Path(__file__).parent.parent / 'data' / 'lca-dataset 1.xlsx')
 
         # Compose json config path
-        json_file = 'src/mapping/mapping_config/mapping_IFC_LCA1.json'
+        json_file = Path(__file__).parent.parent / 'mapping' / 'mapping_config' / 'mapping_IFC_LCA1.json'
 
         # Read json content
         with open(json_file) as json_data:
             material_mapping = json.load(json_data)
 
         for _type, _class in self.TYPES.items():
-            for elem in getattr(self.speckle_project, '@' + _type[3:].lower() + 's'):
+            for elem in getattr(self.speckle_project, '@' + _type[3:].lower() + 's', []):
 
                 for material in material_mapping.keys():
                     if material in elem.name.lower():
+                        lca_data = df[df['Resources.Name'] == material_mapping[material]]
+                        lca_data = lca_data.iloc[0]
+                        density = lca_data['Resources.Conversions.Value']
+                        if isinstance(density, str):
+                            density = float(ast.literal_eval(density.replace(',', '.')))
+                        gwp_per_kg = lca_data['Resources.DataItems.DataValueItems.Value']
+                        if isinstance(gwp_per_kg, str):
+                            gwp_per_kg = float(ast.literal_eval(gwp_per_kg.replace(',', '.')))
+
+                        if elem.volume:
+                            gwp = elem.volume * density * gwp_per_kg
+                            elem.density = density
+                            elem.gwp_per_kg = gwp_per_kg
+                            elem.gwp = gwp
+                    elif material in getattr(elem, 'family', ''):
                         lca_data = df[df['Resources.Name'] == material_mapping[material]]
                         lca_data = lca_data.iloc[0]
                         density = lca_data['Resources.Conversions.Value']
@@ -133,11 +155,11 @@ class IfcConverter:
         client = sw.get_client(token=token)
         transport = sw.get_transport(token=token)
 
-        _hash = operations.send(base=self.speckle_project, transports=[transport])
+        hash_obj = operations.send(base=self.speckle_project, transports=[transport])
 
         client.branch.create(sw.stream_id, project_name)
 
-        commit_id = client.commit.create(stream_id=transport.stream_id, object_id=_hash, branch_name=project_name)
+        commit_id = client.commit.create(stream_id=transport.stream_id, object_id=hash_obj, branch_name=project_name)
 
-        return _hash, f'https://speckle.xyz/streams/{transport.stream_id}/commits/{commit_id}'
+        return hash_obj, f'https://speckle.xyz/streams/{transport.stream_id}/commits/{commit_id}'
 
