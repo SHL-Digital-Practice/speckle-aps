@@ -4,7 +4,7 @@ import os
 
 import ifcopenshell
 
-from src.converter.converter import IfcConverter
+from IFCConverterAndLCA.converter.converter import IfcConverter
 import requests
 
 stream_url = 'https://speckle.xyz/streams/cb3735a1c9'
@@ -12,7 +12,7 @@ project_name = 'test_mvb_bylu'
 token = 'e060268f3483e9777fa5f2e52f0a88471530b8ce6b'
 # file = Path(f'temp/{uuid.uuid4().hex}.ifc')
 # file = Path(r'D:\Documents\1Development\AEC Hackathon Zurich 2024\speckle-aps\src\temp\0f983b06be2a466b9178ccf0a8d51bb1.ifc')
-file = Path(r'D:\Documents\1Development\AEC Hackathon Zurich 2024\speckle-aps\src\temp\HACK_RVT22_BYLU.ifc')
+file = Path(r'/speckle-aps/converterlca\temp\HACK_RVT22_BYLU.ifc')
 
 # ifcopenshell.open(file)
 # file.parent.mkdir(parents=True, exist_ok=True)

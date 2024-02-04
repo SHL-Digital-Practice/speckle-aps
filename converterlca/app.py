@@ -13,7 +13,7 @@ import sys
 import os
 sys.path.append(str(Path(os.getcwd()).parent))
 
-from src.converter.converter import IfcConverter
+from converterlca.converter.converter import IfcConverter
 
 from specklepy.api.wrapper import StreamWrapper
 from specklepy.objects import Base

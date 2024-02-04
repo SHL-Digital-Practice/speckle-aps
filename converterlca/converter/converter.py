@@ -16,9 +16,9 @@ import sys
 import os
 sys.path.append(str(Path(os.getcwd()).parent))
 
-from src.objects import *
+from converterlca.objects import *
 
-from src.mapping import *
+from converterlca.mapping import *
 
 import pandas as pd
 
