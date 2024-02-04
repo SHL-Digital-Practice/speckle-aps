@@ -113,7 +113,7 @@ export class ApsService {
       where: { apsUri: modelUrn },
     });
 
-    if (job.speckleRootObjectId && job.speckleStreamUrl) {
+    if (job && job.speckleRootObjectId && job.speckleStreamUrl) {
       return {
         speckleStreamUrl: job.speckleStreamUrl,
         speckleRootObjectId: job.speckleRootObjectId,
