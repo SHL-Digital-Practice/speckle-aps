@@ -18,7 +18,7 @@
                 type="checkbox"
                 class="checkbox checkbox-primary"
                 :id="content.id"
-                :value="content.latestVersion"
+                :value="content"
                 v-model="checkedFiles"
               />
             </div>
@@ -54,8 +54,7 @@ const closeModal = () => {
 };
 
 const handleAdd = () => {
-  const newSet = new Set([...modelsCart.value, ...checkedFiles.value]);
-  modelsCart.value = Array.from(newSet);
+  modelsCart.value = [...modelsCart.value, ...checkedFiles.value];
   closeModal();
 };
 

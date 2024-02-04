@@ -15,7 +15,7 @@ type Folder = {
   type: 'folder';
 };
 
-type Content = File | Folder;
+export type Content = File | Folder;
 
 export default defineEventHandler(async (event) => {
   const projectId = getRouterParam(event, 'id');
